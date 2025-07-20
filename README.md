@@ -1,36 +1,59 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# QR Code Generator
 
-## Getting Started
+A modern, animated QR code generator built with Next.js, React, and Tailwind CSS.
 
-First, run the development server:
+## Features
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+- Generate QR codes from any link or plain text
+- Animated dot grid background
+- Option to show the destination website's favicon/logo in the center of the QR code (auto-detects from URL)
+- Toggle to show/hide the logo in the QR code
+- Download the generated QR code as a PNG
+- Responsive, dark-themed UI
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Tech Stack
+- Next.js (App Router)
+- React
+- Tailwind CSS
+- [qr-code-styling](https://github.com/kozakdenys/qr-code-styling) for QR code rendering
+- [faviconkit.com](https://faviconkit.com/) for dynamic favicon fetching
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Setup
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+1. **Install dependencies:**
+   ```sh
+   npm install
+   # or
+   yarn install
+   ```
 
-## Learn More
+2. **Run the development server:**
+   ```sh
+   npm run dev
+   # or
+   yarn dev
+   ```
 
-To learn more about Next.js, take a look at the following resources:
+3. **Open your browser:**
+   Visit [http://localhost:3000](http://localhost:3000)
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Usage
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+- Enter a URL or any text in the input field.
+- Click the arrow button to generate a QR code.
+- (Optional) Use the "Show logo" toggle to display the website's favicon in the center of the QR code (works for most public sites).
+- Click "Download as PNG" to save the QR code image.
+- Click "Clear" to reset the input and QR code.
 
-## Deploy on Vercel
+## Notes
+- The logo in the QR code is fetched dynamically using the website's favicon (via faviconkit.com). If the favicon is not available, no logo is shown.
+- For best results, use valid URLs (e.g., `https://github.com/username`).
+- The app is fully client-side and does not store or track any data.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Customization
+- To use a custom default logo, replace `public/logo.png` with your own PNG image.
+- You can adjust the QR code and logo size in the code (`imageSize` in `BlobsQRCode`).
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+---
+
+Built with ❤️ by [Your Name]

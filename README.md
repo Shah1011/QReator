@@ -56,4 +56,4 @@ A modern, animated QR code generator built with Next.js, React, and Tailwind CSS
 
 ---
 
-Built with ❤️ by [Your Name]
+Built with ❤️ by Shah.

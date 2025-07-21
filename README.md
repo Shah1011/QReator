@@ -1,4 +1,4 @@
-# QR Code Generator
+# QReator - QR generator 
 
 A modern, animated QR code generator built with Next.js, React, and Tailwind CSS.
 

@@ -10,6 +10,12 @@
 !.yarn/releases
 !.yarn/versions
 
+# VS Code - ignore personal settings but allow shared configs
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
 # testing
 /coverage
 

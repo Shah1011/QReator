@@ -1,6 +1,6 @@
 "use client";
 import { FC } from "react";
-const QRCode = require("qrcode.react").default;
+import QRCode from "qrcode.react";
 
 const QRCodeGenerator: FC<{ value: string }> = ({ value }) => {
   if (!value) return null;

@@ -3,6 +3,8 @@ import Image from "next/image";
 import { useState, useCallback, memo } from "react";
 import { useEffect, useRef } from "react";
 import DotGrid from "../blocks/Backgrounds/DotGrid/DotGrid";
+import Footer from "./Footer";
+import StarBorder from '../blocks/Animations/StarBorder/StarBorder'
 
 const BlobsQRCode = memo(function BlobsQRCode({
   value,
@@ -16,7 +18,7 @@ const BlobsQRCode = memo(function BlobsQRCode({
   onReady,
 }: {
   value: string;
-  qrCodeRef: React.MutableRefObject<any> | { current: null };
+  qrCodeRef: React.MutableRefObject<unknown> | { current: null };
   width?: number;
   height?: number;
   dotsColor?: string;
@@ -36,7 +38,7 @@ const BlobsQRCode = memo(function BlobsQRCode({
     import("qr-code-styling")
       .then(({ default: QRCodeStyling }) => {
         try {
-          const qrCodeOptions: any = {
+          const qrCodeOptions: Record<string, unknown> = {
             width,
             height,
             type: "canvas",
@@ -159,7 +161,7 @@ export default function Home() {
     bgColor: "#fff",
     cornersColor: "#000",
   });
-  const qrCodeRef = useRef<any>(null); // Ref to store the qr-code-styling instance
+  const qrCodeRef = useRef<unknown>(null); // Ref to store the qr-code-styling instance
 
   const [showLogo, setShowLogo] = useState(false);
   const [logoUrl, setLogoUrl] = useState<string | null>(null);
@@ -287,9 +289,13 @@ export default function Home() {
 
     try {
       // First, try to get raw data URL from the QR code library
-      if (qrCodeRef.current.getRawData) {
+      if (
+        qrCodeRef.current &&
+        typeof qrCodeRef.current === "object" &&
+        "getRawData" in qrCodeRef.current
+      ) {
         try {
-          const dataUrl = await qrCodeRef.current.getRawData("png");
+          const dataUrl = await (qrCodeRef.current as any).getRawData("png");
           if (dataUrl) {
             // Convert data URL to blob using a more reliable method
             const base64Data = dataUrl.split(",")[1];
@@ -315,7 +321,7 @@ export default function Home() {
       }
 
       // Fallback: try to find canvas element
-      let canvas = qrCodeRef.current._canvas;
+      let canvas = (qrCodeRef.current as any)?._canvas;
 
       if (!canvas) {
         // Try to find canvas in the DOM
@@ -428,6 +434,12 @@ export default function Home() {
                     <span className="text-xs md:mt-6">Logo</span>
                   </div>
                   {/* Main QR code */}
+                  <StarBorder
+                    as="button"
+                    className="custom-class"
+                    color="cyan"
+                    speed="5s"
+                  >
                   <div className="flex items-center justify-center relative order-2 md:order-none">
                     {/* Plus icon for logo upload - centered */}
                     {showLogo && !logoUrl && (
@@ -510,14 +522,17 @@ export default function Home() {
                         className="absolute bottom-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 cursor-pointer bg-black/50 rounded-full p-1.5 sm:p-2 hover:bg-black/70"
                         onClick={copyQRToClipboard}
                       >
-                        <img
+                        <Image
                           src="/copy.svg"
                           alt="Copy QR Code"
+                          width={16}
+                          height={16}
                           className="w-4 h-4 sm:w-5 sm:h-5 invert"
                         />
                       </div>
                     </div>
                   </div>
+                  </StarBorder>
                   {/* Sample QR codes with navigation */}
                   <div className="flex flex-row md:flex-col items-center order-3 md:order-none md:ml-4 lg:ml-8">
                     {/* Mobile: Left arrow */}
@@ -625,9 +640,11 @@ export default function Home() {
                               {/* Overlay icon */}
                               <span className="absolute inset-0 flex items-center justify-center pointer-events-none">
                                 {sample.image ? (
-                                  <img
+                                  <Image
                                     src={sample.image}
                                     alt={sample.label}
+                                    width={40}
+                                    height={40}
                                     className="w-10 h-10"
                                     style={{ borderRadius: 0 }}
                                   />
@@ -687,9 +704,11 @@ export default function Home() {
                               {/* Overlay icon */}
                               <span className="absolute inset-0 flex items-center justify-center pointer-events-none">
                                 {sample.image ? (
-                                  <img
+                                  <Image
                                     src={sample.image}
                                     alt={sample.label}
+                                    width={32}
+                                    height={32}
                                     className="w-8 h-8"
                                     style={{ borderRadius: 0 }}
                                   />
@@ -779,8 +798,13 @@ export default function Home() {
                     : "hover:bg-[#383838] dark:hover:bg-[#ccc]"
                 }`}
                 onClick={() => {
-                  if (qrCodeRef.current && qrValue) {
-                    qrCodeRef.current.download({
+                  if (
+                    qrCodeRef.current &&
+                    qrValue &&
+                    typeof qrCodeRef.current === "object" &&
+                    "download" in qrCodeRef.current
+                  ) {
+                    (qrCodeRef.current as any).download({
                       name: "qr-code",
                       extension: "png",
                     });
@@ -789,9 +813,11 @@ export default function Home() {
                 disabled={!qrValue || !qrReady}
               >
                 Download
-                <img
+                <Image
                   src="/download.svg"
                   alt="Download"
+                  width={16}
+                  height={16}
                   className="w-4 h-4 sm:w-5 sm:h-5 ml-1"
                 />
               </button>
@@ -819,23 +845,7 @@ export default function Home() {
           )}
         </div>
 
-        <footer className="w-full flex gap-[24px] flex-wrap items-center justify-center py-4 bg-transparent">
-          <a
-            className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-            href="https://iamshah.blog"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              aria-hidden
-              src="/globe.svg"
-              alt="Globe icon"
-              width={16}
-              height={16}
-            />
-            iamshah.blog
-          </a>
-        </footer>
+        <Footer />
       </div>
 
       {/* Hide scrollbar utility for Tailwind */}

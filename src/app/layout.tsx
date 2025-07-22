@@ -13,7 +13,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "QR Generator",
+  title: "QReator",
   description: "Made By Shah.",
 };
 

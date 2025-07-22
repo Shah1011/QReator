@@ -14,19 +14,19 @@ services:
     container_name: qr-generator-app
 
   # Development service (optional)
-  qr-generator-dev:
-    build:
-      context: .
-      dockerfile: Dockerfile.dev
-    ports:
-      - "3001:3000"
-    volumes:
-      - .:/app
-      - /app/node_modules
-      - /app/.next
-    environment:
-      - NODE_ENV=development
-    restart: unless-stopped
-    container_name: qr-generator-dev
-    profiles:
-      - dev
+  # qr-generator-dev:
+  #   build:
+  #     context: .
+  #     dockerfile: Dockerfile.dev
+  #   ports:
+  #     - "3001:3000"
+  #   volumes:
+  #     - .:/app
+  #     - /app/node_modules
+  #     - /app/.next
+  #   environment:
+  #     - NODE_ENV=development
+  #   restart: unless-stopped
+  #   container_name: qr-generator-dev
+  #   profiles:
+  #     - dev

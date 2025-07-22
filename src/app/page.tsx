@@ -3,7 +3,8 @@ import Image from "next/image";
 import { useState, useCallback, memo } from "react";
 import { useEffect, useRef } from "react";
 import DotGrid from "../blocks/Backgrounds/DotGrid/DotGrid";
-import Footer from "./Footer";
+import Footer from "../components/Footer";
+import Loader from "../components/Loader";
 
 const BlobsQRCode = memo(function BlobsQRCode({
   value,
@@ -83,10 +84,14 @@ const BlobsQRCode = memo(function BlobsQRCode({
           }
         } catch (error) {
           console.error("Error creating QR code:", error);
+          // Call onReady even if there's an error to prevent infinite loading
+          if (onReady) onReady();
         }
       })
       .catch((error) => {
         console.error("Error importing qr-code-styling:", error);
+        // Call onReady even if import fails to prevent infinite loading
+        if (onReady) onReady();
       });
   }, [
     value,
@@ -256,6 +261,11 @@ export default function Home() {
         cornersColor: sampleQRCodes[0].cornersColor,
       });
       setError("");
+
+      // Ensure loader shows for at least 1 second, then show QR code
+      setTimeout(() => {
+        setQrReady(true);
+      }, 1000);
     } else {
       setError("Please enter a valid URL or plain text (no code or tags).");
     }
@@ -277,8 +287,23 @@ export default function Home() {
   }, []);
 
   const handleQRReady = useCallback(() => {
-    setQrReady(true);
+    // Add a minimum loading time so users can see the loader animation
+    setTimeout(() => {
+      setQrReady(true);
+    }, 500); // Reduced to 500ms for better UX
   }, []);
+
+  // Fallback timeout to prevent infinite loading
+  useEffect(() => {
+    if (qrValue && !qrReady) {
+      const fallbackTimeout = setTimeout(() => {
+        console.log("Fallback timeout triggered - setting QR ready");
+        setQrReady(true);
+      }, 2000); // Reduced to 2 seconds
+
+      return () => clearTimeout(fallbackTimeout);
+    }
+  }, [qrValue, qrReady]);
 
   const copyQRToClipboard = useCallback(async () => {
     if (!qrCodeRef.current || !qrValue) {
@@ -294,7 +319,11 @@ export default function Home() {
         "getRawData" in qrCodeRef.current
       ) {
         try {
-          const dataUrl = await (qrCodeRef.current as { getRawData: (format: string) => Promise<string> }).getRawData("png");
+          const dataUrl = await (
+            qrCodeRef.current as {
+              getRawData: (format: string) => Promise<string>;
+            }
+          ).getRawData("png");
           if (dataUrl) {
             // Convert data URL to blob using a more reliable method
             const base64Data = dataUrl.split(",")[1];
@@ -320,7 +349,8 @@ export default function Home() {
       }
 
       // Fallback: try to find canvas element
-      let canvas = (qrCodeRef.current as { _canvas?: HTMLCanvasElement })?._canvas;
+      let canvas = (qrCodeRef.current as { _canvas?: HTMLCanvasElement })
+        ?._canvas;
 
       if (!canvas) {
         // Try to find canvas in the DOM
@@ -433,64 +463,74 @@ export default function Home() {
                     <span className="text-xs md:mt-6">Logo</span>
                   </div>
                   {/* Main QR code */}
-                      {/* Plus icon for logo upload - centered */}
-                      {showLogo && !logoUrl && (
-                        <>
-                          <button
-                            type="button"
-                            title="Add New"
-                            onClick={() =>
-                              document
-                                .getElementById("logo-upload-input")
-                                ?.click()
-                            }
-                            className="group cursor-pointer outline-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 hover:rotate-90 duration-300 z-20 bg-[#212121] rounded-full w-12 h-12 sm:w-14 sm:h-14 flex items-center justify-center"
+                  <div className="flex items-center justify-center relative order-2 md:order-none">
+                    {/* Plus icon for logo upload - centered */}
+                    {showLogo && !logoUrl && (
+                      <>
+                        <button
+                          type="button"
+                          title="Add New"
+                          onClick={() =>
+                            document
+                              .getElementById("logo-upload-input")
+                              ?.click()
+                          }
+                          className="group cursor-pointer outline-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 hover:rotate-90 duration-300 z-20 bg-[#212121] rounded-full w-12 h-12 sm:w-14 sm:h-14 flex items-center justify-center"
+                        >
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            width="32px"
+                            height="32px"
+                            viewBox="0 0 24 24"
+                            className="sm:w-10 sm:h-10 stroke-zinc-400 fill-none group-hover:fill-zinc-800 group-active:stroke-zinc-200 group-active:fill-zinc-600 group-active:duration-0 duration-300"
                           >
-                            <svg
-                              xmlns="http://www.w3.org/2000/svg"
-                              width="32px"
-                              height="32px"
-                              viewBox="0 0 24 24"
-                              className="sm:w-10 sm:h-10 stroke-zinc-400 fill-none group-hover:fill-zinc-800 group-active:stroke-zinc-200 group-active:fill-zinc-600 group-active:duration-0 duration-300"
-                            >
-                              <path
-                                d="M12 22C17.5 22 22 17.5 22 12C22 6.5 17.5 2 12 2C6.5 2 2 6.5 2 12C2 17.5 6.5 22 12 22Z"
-                                strokeWidth="1.5"
-                              ></path>
-                              <path d="M8 12H16" strokeWidth="1.5"></path>
-                              <path d="M12 16V8" strokeWidth="1.5"></path>
-                            </svg>
-                          </button>
-                          <input
-                            id="logo-upload-input"
-                            type="file"
-                            accept="image/*"
-                            style={{ display: "none" }}
-                            onChange={(e) => {
-                              const file = e.target.files && e.target.files[0];
-                              if (file) {
-                                const reader = new FileReader();
-                                reader.onload = (ev) =>
-                                  setLogoUrl(ev.target?.result as string);
-                                reader.readAsDataURL(file);
-                              } else {
-                                setLogoUrl(null);
-                              }
-                            }}
-                          />
-                        </>
-                      )}
-                      <div
-                        className="relative group"
-                        style={{
-                          borderRadius: 10,
-                          overflow: "hidden",
-                          display: "inline-block",
-                          padding: 8,
-                          background: selectedStyle.bgColor,
-                          border: `2px solid ${selectedStyle.bgColor}`,
-                        }}
-                      >
+                            <path
+                              d="M12 22C17.5 22 22 17.5 22 12C22 6.5 17.5 2 12 2C6.5 2 2 6.5 2 12C2 17.5 6.5 22 12 22Z"
+                              strokeWidth="1.5"
+                            ></path>
+                            <path d="M8 12H16" strokeWidth="1.5"></path>
+                            <path d="M12 16V8" strokeWidth="1.5"></path>
+                          </svg>
+                        </button>
+                        <input
+                          id="logo-upload-input"
+                          type="file"
+                          accept="image/*"
+                          style={{ display: "none" }}
+                          onChange={(e) => {
+                            const file = e.target.files && e.target.files[0];
+                            if (file) {
+                              const reader = new FileReader();
+                              reader.onload = (ev) =>
+                                setLogoUrl(ev.target?.result as string);
+                              reader.readAsDataURL(file);
+                            } else {
+                              setLogoUrl(null);
+                            }
+                          }}
+                        />
+                      </>
+                    )}
+                    <div
+                      className="relative group"
+                      style={{
+                        borderRadius: 10,
+                        overflow: "hidden",
+                        display: "inline-block",
+                        padding: 8,
+                        background: selectedStyle.bgColor,
+                        border: `2px solid ${selectedStyle.bgColor}`,
+                      }}
+                    >
+                      <div className="relative">
+                        {!qrReady && (
+                          <div
+                            className="absolute inset-0 flex items-center justify-center z-10"
+                            style={{ width: 180, height: 180 }}
+                          >
+                            <Loader />
+                          </div>
+                        )}
                         <BlobsQRCode
                           value={qrValue}
                           qrCodeRef={qrCodeRef}
@@ -508,21 +548,23 @@ export default function Home() {
                           }
                           onReady={handleQRReady}
                         />
-
-                        {/* Copy overlay - only visible on hover */}
-                        <div
-                          className="absolute bottom-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 cursor-pointer bg-black/50 rounded-full p-1.5 sm:p-2 hover:bg-black/70"
-                          onClick={copyQRToClipboard}
-                        >
-                          <Image
-                            src="/copy.svg"
-                            alt="Copy QR Code"
-                            width={16}
-                            height={16}
-                            className="w-4 h-4 sm:w-5 sm:h-5 invert"
-                          />
-                        </div>
                       </div>
+
+                      {/* Copy overlay - only visible on hover */}
+                      <div
+                        className="absolute bottom-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 cursor-pointer bg-black/50 rounded-full p-1.5 sm:p-2 hover:bg-black/70"
+                        onClick={copyQRToClipboard}
+                      >
+                        <Image
+                          src="/copy.svg"
+                          alt="Copy QR Code"
+                          width={16}
+                          height={16}
+                          className="w-4 h-4 sm:w-5 sm:h-5 invert"
+                        />
+                      </div>
+                    </div>
+                  </div>
                   {/* Sample QR codes with navigation */}
                   <div className="flex flex-row md:flex-col items-center order-3 md:order-none md:ml-4 lg:ml-8">
                     {/* Mobile: Left arrow */}
@@ -794,7 +836,14 @@ export default function Home() {
                     typeof qrCodeRef.current === "object" &&
                     "download" in qrCodeRef.current
                   ) {
-                    (qrCodeRef.current as { download: (options: { name: string; extension: string }) => void }).download({
+                    (
+                      qrCodeRef.current as {
+                        download: (options: {
+                          name: string;
+                          extension: string;
+                        }) => void;
+                      }
+                    ).download({
                       name: "qr-code",
                       extension: "png",
                     });

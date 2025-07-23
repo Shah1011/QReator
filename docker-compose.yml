@@ -1,17 +1,16 @@
-version: '3.8'
-
 services:
   qr-generator:
     build:
       context: .
       dockerfile: Dockerfile
+    image: shah1011/qreator:latest
     ports:
       - "3000:3000"
     environment:
       - NODE_ENV=production
       - NEXT_TELEMETRY_DISABLED=1
     restart: unless-stopped
-    container_name: qr-generator-app
+    container_name: qreator
 
   # Development service (optional)
   # qr-generator-dev:

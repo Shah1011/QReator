@@ -81,11 +81,20 @@ jobs:
 
       - name: Check build artifacts
         run: |
-          if [ ! -d ".next" ]; then
-            echo "Build failed - .next directory not found"
+          echo "Checking build artifacts..."
+          ls -la
+          if [ -d ".next" ]; then
+            echo "✅ .next directory found"
+            ls -la .next/
+          elif [ -f ".next/standalone/server.js" ]; then
+            echo "✅ Standalone build found"
+            ls -la .next/standalone/
+          else
+            echo "❌ Build artifacts not found"
+            echo "Available files:"
+            find . -name "*.js" -o -name ".next*" | head -20
             exit 1
           fi
-          echo "Build successful - .next directory exists"
 
       - name: Test build size
         run: |
@@ -126,14 +135,14 @@ jobs:
           context: .
           file: ./Dockerfile
           push: false
-          tags: qr-generator:test
+          tags: qreator:test
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
       - name: Test Docker image
         run: |
           # Start container in background
-          docker run -d --name qr-test -p 3000:3000 qr-generator:test
+          docker run -d --name qr-test -p 3000:3000 qreator:test
 
           # Wait for container to start
           sleep 10
@@ -161,7 +170,7 @@ jobs:
       - name: Run Trivy vulnerability scanner
         uses: aquasecurity/trivy-action@master
         with:
-          image-ref: "qr-generator:test"
+          image-ref: "qreator:test"
           format: "sarif"
           output: "trivy-results.sarif"
         continue-on-error: true
@@ -192,22 +201,10 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Download build artifacts
-        uses: actions/download-artifact@v4
-        with:
-          name: build-artifacts
-
-      - name: Verify build artifacts
-        run: |
-          if [ ! -d ".next" ]; then
-            echo "Error: .next directory not found in artifacts"
-            echo "Available files:"
-            ls -la
-            exit 1
-          fi
-          echo "✅ .next directory found"
-          echo "Contents of .next:"
-          ls -la .next/
+      - name: Build application for performance tests
+        run: npm run build
+        env:
+          NEXT_TELEMETRY_DISABLED: 1
 
       - name: Create Lighthouse CI config
         run: |
@@ -215,7 +212,6 @@ jobs:
           module.exports = {
             ci: {
               collect: {
-                staticDistDir: '.next',
                 url: ['http://localhost:3000'],
                 numberOfRuns: 1,
                 settings: {

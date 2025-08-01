@@ -304,6 +304,11 @@ jobs:
     needs: [code-quality, build-and-test, docker-build]
     if: github.event_name == 'pull_request'
 
+    permissions:
+      contents: read
+      issues: write
+      pull-requests: write
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -324,14 +329,21 @@ jobs:
 
       - name: Comment PR with preview info
         uses: actions/github-script@v7
+        continue-on-error: true
         with:
           script: |
-            github.rest.issues.createComment({
-              issue_number: context.issue.number,
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              body: '🚀 **Preview Build Successful!**\n\n✅ All checks passed\n✅ Docker image built successfully\n✅ Performance tests completed\n\nReady for review and merge!'
-            })
+            try {
+              await github.rest.issues.createComment({
+                issue_number: context.issue.number,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                body: '🚀 **Preview Build Successful!**\n\n✅ All checks passed\n✅ Docker image built successfully\n✅ Performance tests completed\n\nReady for review and merge!'
+              });
+              console.log('✅ PR comment created successfully');
+            } catch (error) {
+              console.log('⚠️ Could not create PR comment:', error.message);
+              console.log('This is likely due to insufficient permissions, but the build was successful.');
+            }
 
   # Job 6: Build and Push Docker Image (on main branch)
   build-and-push:
